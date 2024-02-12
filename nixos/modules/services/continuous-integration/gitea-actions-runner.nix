@@ -199,7 +199,9 @@ in
           wantedBy = [
             "multi-user.target"
           ];
-          environment = optionalAttrs (instance.token != null) {
+          environment = {
+            HOME = "/var/lib/gitea-runner/${name}";
+          } // optionalAttrs (instance.token != null) {
             TOKEN = "${instance.token}";
           } // optionalAttrs (wantsPodman) {
             DOCKER_HOST = "unix:///run/podman/podman.sock";
