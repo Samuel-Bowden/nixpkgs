@@ -33,6 +33,7 @@
 , tbb_2021_8
 , wayland
 , wayland-protocols
+, wrapGAppsHook
 }:
 let
   # get cccl from source to avoid license issues
@@ -78,12 +79,12 @@ in
 # clang consume much less RAM than GCC
 clangStdenv.mkDerivation rec {
   pname = "openscad-unstable";
-  version = "2024-01-22";
+  version = "2024-02-18";
   src = fetchFromGitHub {
     owner = "openscad";
     repo = "openscad";
-    rev = "88d244aed3c40a76194ff537ed84bd65bc0e1aeb";
-    hash = "sha256-qkQNbYhmOxF14zm+eCcwe9asLOEciYBANefUb8+KNEI=";
+    rev = "f5688998760d6b85d7b280300388448c162edc42";
+    hash = "sha256-rQnih7Am7NvlrTwIGAN4QbZCcziFm6YOOT27wmjcY8A=";
     fetchSubmodules = true;
   };
   nativeBuildInputs = [
@@ -95,6 +96,7 @@ clangStdenv.mkDerivation rec {
     python3
     libsForQt5.qt5.wrapQtAppsHook
     llvmPackages.bintools
+    wrapGAppsHook
   ];
   buildInputs = with libsForQt5; with qt5; [
     # manifold dependencies

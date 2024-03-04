@@ -1,4 +1,4 @@
-{ config, stdenv, fetchurl, lib, acpica-tools, dev86, pam, libxslt, libxml2, wrapQtAppsHook
+{ config, stdenv, fetchurl, fetchpatch, lib, acpica-tools, dev86, pam, libxslt, libxml2, wrapQtAppsHook
 , libX11, xorgproto, libXext, libXcursor, libXmu, libIDL, SDL2, libcap, libGL, libGLU
 , libpng, glib, lvm2, libXrandr, libXinerama, libopus, libtpms, qtbase, qtx11extras
 , qttools, qtsvg, qtwayland, pkg-config, which, docbook_xsl, docbook_xml_dtd_43
@@ -26,14 +26,14 @@ let
   buildType = "release";
   # Use maintainers/scripts/update.nix to update the version and all related hashes or
   # change the hashes in extpack.nix and guest-additions/default.nix as well manually.
-  version = "7.0.12";
+  version = "7.0.14";
 in stdenv.mkDerivation {
   pname = "virtualbox";
   inherit version;
 
   src = fetchurl {
     url = "https://download.virtualbox.org/virtualbox/${version}/VirtualBox-${version}.tar.bz2";
-    sha256 = "d76634c6ccf62503726a5aeae6c78a3462474c51a0ebe4942591ccc2d939890a";
+    sha256 = "45860d834804a24a163c1bb264a6b1cb802a5bc7ce7e01128072f8d6a4617ca9";
   };
 
   outputs = [ "out" "modsrc" ];
@@ -85,7 +85,13 @@ in stdenv.mkDerivation {
   patches =
      optional enableHardening ./hardened.patch
      # Since VirtualBox 7.0.8, VBoxSDL requires SDL2, but the build framework uses SDL1
-  ++ optional (!headless) ./fix-sdl.patch
+  ++ optionals (!headless) [ ./fix-sdl.patch
+     # No update patch disables check for update function
+     # https://bugs.launchpad.net/ubuntu/+source/virtualbox-ose/+bug/272212
+     (fetchpatch {
+       url = "https://salsa.debian.org/pkg-virtualbox-team/virtualbox/-/raw/debian/${version}-dfsg-1/debian/patches/16-no-update.patch";
+       hash = "sha256-UJHpuB6QB/BbxJorlqZXUF12lgq8gbLMRHRMsbyqRpY=";
+     })]
   ++ [ ./extra_symbols.patch ]
      # When hardening is enabled, we cannot use wrapQtApp to ensure that VirtualBoxVM sees
      # the correct environment variables needed for Qt to work, specifically QT_PLUGIN_PATH.
@@ -214,6 +220,8 @@ in stdenv.mkDerivation {
         mkdir -p $out/share/icons/hicolor/$size/apps
         ln -s $libexec/icons/$size/*.png $out/share/icons/hicolor/$size/apps
       done
+      # Translation
+      ln -sv $libexec/nls "$out/share/virtualbox"
     ''}
 
     cp -rv out/linux.*/${buildType}/bin/src "$modsrc"
